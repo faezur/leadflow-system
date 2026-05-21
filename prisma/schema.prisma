@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Provider {
+  id                     Int              @id @default(autoincrement())
+  name                   String
+  monthlyQuota           Int              @default(10)
+  leadsReceivedThisMonth Int              @default(0)
+  assignments            LeadAssignment[]
+}
+
+model Lead {
+  id          Int              @id @default(autoincrement())
+  name        String
+  phone       String
+  city        String
+  serviceId   Int
+  serviceName String
+  description String
+  createdAt   DateTime         @default(now())
+  assignments LeadAssignment[]
+
+  @@unique([phone, serviceId])
+}
+
+model LeadAssignment {
+  id         Int      @id @default(autoincrement())
+  leadId     Int
+  providerId Int
+  assignedAt DateTime @default(now())
+
+  lead     Lead     @relation(fields: [leadId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@unique([leadId, providerId])
+}
+
+model AllocationState {
+  serviceId       Int @id
+  roundRobinIndex Int @default(0)
+}
